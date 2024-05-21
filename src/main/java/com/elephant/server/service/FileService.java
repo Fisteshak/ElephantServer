@@ -41,4 +41,17 @@ public class FileService {
             throw new IOException("Failed to create file at /" + path);
         }
     }
+
+    public Path createDirectory(String path) throws IOException {
+        Path directoryPath = Paths.get(path);
+        try {
+            if (!Files.exists(directoryPath)) {
+                Files.createDirectories(directoryPath);
+            }
+        } catch (Exception e) {
+            //TODO expand error handling
+            throw new IOException("Failed to create directory at /" + path);
+        }
+        return directoryPath;
+    }
 }

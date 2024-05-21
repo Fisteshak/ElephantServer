@@ -2,7 +2,9 @@ package com.elephant.server.models;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 
@@ -11,6 +13,8 @@ import java.util.Objects;
 @Getter
 @Setter
 @Embeddable
+@NoArgsConstructor
+@AllArgsConstructor
 public class FolderFileId implements java.io.Serializable {
     private static final long serialVersionUID = 4471166429757289076L;
     @Column(name = "folder_id", nullable = false)

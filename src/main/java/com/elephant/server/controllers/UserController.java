@@ -36,7 +36,11 @@ public class UserController {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.saveAndFlush(user);
         return user;
+    }
 
+    @GetMapping("/test")
+    public boolean testCredentials() {
+        return true;
     }
 
 }
