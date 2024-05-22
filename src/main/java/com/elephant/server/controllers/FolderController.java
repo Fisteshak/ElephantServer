@@ -7,14 +7,18 @@ import com.elephant.server.repositories.FileRepository;
 import com.elephant.server.repositories.FolderFileRepository;
 import com.elephant.server.repositories.FolderFolderRepository;
 import com.elephant.server.repositories.FolderRepository;
+import com.elephant.server.service.DatabaseFsService;
+import com.elephant.server.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/fs/folder")
@@ -27,6 +31,8 @@ public class FolderController {
     FolderFileRepository folderFileRepository;
     @Autowired
     FolderFolderRepository folderFolderRepository;
+    @Autowired
+    private FileService fileService;
 
 
     //returns ID of folder
@@ -36,7 +42,7 @@ public class FolderController {
             Folder parentFolder = folderRepository.findFolderById(parentFolderID)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with id: " + parentFolderID + " not found"));
 
-            if (isFolderNameExists(parentFolder, name)) {
+            if (DatabaseFsService.isFolderNameExists(parentFolder, name, folderFolderRepository)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Folder with the same name already exists");
             }
 
@@ -47,21 +53,19 @@ public class FolderController {
             FolderFolder folderFolder = new FolderFolder(folderFolderId, childFolder.getParent(), childFolder);
             folderFolderRepository.save(folderFolder);
 
+            fileService.createDirectory(FileService.FILES_DIRECTORY + DatabaseFsService.getPath(childFolder.getId(), folderRepository));
+
+
+
             return new ResponseEntity<>(childFolder.getId(), HttpStatus.CREATED);
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
+
     }
 
-    private boolean isFolderNameExists(Folder parentFolder, String name) {
-        List<FolderFolder> parentSubfoldersList = folderFolderRepository.findFolderFoldersByParentFolder(parentFolder);
-        for (FolderFolder folder : parentSubfoldersList) {
-            if (folder.getChildFolder().getName().equals(name)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     @GetMapping
     ResponseEntity<?> getFolders(@RequestParam("id") Integer parentFolderID) {
@@ -80,6 +84,24 @@ public class FolderController {
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
         }
     }
+
+    @DeleteMapping
+    ResponseEntity<?> deleteFolder(@RequestParam("id") Integer folderID) {
+        try {
+            Folder folder = folderRepository.findFolderById(folderID)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with id: " + folderID + " not found"));
+
+            DatabaseFsService.deleteFolder(folderID, folderFolderRepository, folderRepository);
+            return new ResponseEntity<>(HttpStatus.OK);
+
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+
+    }
+
 
 
 }
