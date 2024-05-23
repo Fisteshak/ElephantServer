@@ -1,8 +1,6 @@
 package com.elephant.server.controllers;
 
-import com.elephant.server.models.Folder;
-import com.elephant.server.models.FolderFolder;
-import com.elephant.server.models.FolderFolderId;
+import com.elephant.server.models.*;
 import com.elephant.server.repositories.FileRepository;
 import com.elephant.server.repositories.FolderFileRepository;
 import com.elephant.server.repositories.FolderFolderRepository;
@@ -31,8 +29,7 @@ public class FolderController {
     FolderFileRepository folderFileRepository;
     @Autowired
     FolderFolderRepository folderFolderRepository;
-    @Autowired
-    private FileService fileService;
+
 
 
     //returns ID of folder
@@ -53,7 +50,7 @@ public class FolderController {
             FolderFolder folderFolder = new FolderFolder(folderFolderId, childFolder.getParent(), childFolder);
             folderFolderRepository.save(folderFolder);
 
-            fileService.createDirectory(FileService.FILES_DIRECTORY + DatabaseFsService.getPath(childFolder.getId(), folderRepository));
+            FileService.createDirectory(FileService.FILES_DIRECTORY + DatabaseFsService.getPath(childFolder.getId(), folderRepository));
 
 
 
@@ -73,12 +70,19 @@ public class FolderController {
             Folder parentFolder = folderRepository.findFolderById(parentFolderID)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with id: " + parentFolderID + " not found"));
             List<FolderFolder> parentSubfoldersList = folderFolderRepository.findFolderFoldersByParentFolder(parentFolder);
-            List<Folder> subfoldersIDs = new ArrayList<>();
+            List<Folder> subfolders = new ArrayList<>();
             for (FolderFolder folder : parentSubfoldersList) {
-                subfoldersIDs.add(folder.getChildFolder());
+                subfolders.add(folder.getChildFolder());
+            }
+            List<FolderFile> folderFilesList = folderFileRepository.findFolderFilesByFolder(parentFolder);
+
+            List<File> subfiles = new ArrayList<>();
+            for (FolderFile file : folderFilesList) {
+                subfiles.add(file.getFile());
             }
 
-            return ResponseEntity.ok(subfoldersIDs);
+
+            return ResponseEntity.ok(new FolderStructure(parentFolder, subfolders, subfiles));
 
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
