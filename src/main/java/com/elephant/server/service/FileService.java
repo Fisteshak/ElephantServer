@@ -1,5 +1,7 @@
 package com.elephant.server.service;
 
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -67,5 +69,14 @@ public class FileService {
             //TODO expand error handling
             throw new IOException("Failed to delete directory at /" + path);
         }
+    }
+
+    public static Resource getFile(String path) throws IOException {
+
+        Path file = Paths.get(FILES_DIRECTORY + path);
+        Resource resource = new FileSystemResource( file);
+
+        return resource;
+
     }
 }

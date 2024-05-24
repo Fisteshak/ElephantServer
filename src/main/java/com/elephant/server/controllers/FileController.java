@@ -14,14 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
 
 @RestController
 @RequestMapping("/fs/file")
@@ -71,6 +69,30 @@ public class FileController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
 
+
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getFile(@RequestParam("file_id") Integer file_id) {
+        try {
+
+
+            File file = fileRepository.findFileById(file_id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File with id: " + file_id + " not found"));
+
+            Folder parentFolder = folderFileRepository.findFolderFileByFileId(file_id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with file id: " + file_id + " not found"))
+                    .getFolder();
+
+            String filepath = DatabaseFsService.getPath(parentFolder.getId(), folderRepository) + FileSystems.getDefault().getSeparator() + file.getName();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .body(FileService.getFile(filepath));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
+        }
 
     }
 
