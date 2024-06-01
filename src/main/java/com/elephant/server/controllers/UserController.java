@@ -2,6 +2,7 @@ package com.elephant.server.controllers;
 
 import com.elephant.server.models.User;
 import com.elephant.server.repositories.UserRepository;
+import com.elephant.server.service.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,8 @@ public class UserController {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+    @Autowired
+    private FileService fileService;
 
     @GetMapping
     public List<User> getUsers() {

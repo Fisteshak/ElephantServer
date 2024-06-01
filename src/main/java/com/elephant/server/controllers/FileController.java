@@ -47,11 +47,10 @@ public class FileController {
             Folder parentFolder = folderRepository.findFolderById(parentID)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with id: " + parentID + " not found"));
 
-
             if (DatabaseFsService.isFileExists(parentFolder, name, folderFileRepository)) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "File with the name: " + name + " already exists");
             }
-            File newFile = new File(name);
+            File newFile = new File(name, parentFolder);
             newFile = fileRepository.saveAndFlush(newFile);
 
             FolderFileId folderFileId = new FolderFileId(parentID, newFile.getId());
@@ -59,7 +58,7 @@ public class FileController {
             FolderFile folderFile = new FolderFile(folderFileId, parentFolder, newFile);
             folderFileRepository.saveAndFlush(folderFile);
 
-            FileService.saveFile(file, FileService.FILES_DIRECTORY + DatabaseFsService.getPath(parentID, folderRepository), name);
+            FileService.saveFile(file, FileService.FILES_DIRECTORY + DatabaseFsService.getFolderPath(parentID, folderRepository), name);
 
             return new ResponseEntity<>(newFile.getId(), HttpStatus.CREATED);
 
@@ -68,23 +67,21 @@ public class FileController {
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
-
-
     }
 
     @GetMapping
     public ResponseEntity<?> getFile(@RequestParam("file_id") Integer file_id) {
         try {
-
-
             File file = fileRepository.findFileById(file_id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "File with id: " + file_id + " not found"));
 
-            Folder parentFolder = folderFileRepository.findFolderFileByFileId(file_id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with file id: " + file_id + " not found"))
-                    .getFolder();
+            Folder parentFolder = file.getParent();
 
-            String filepath = DatabaseFsService.getPath(parentFolder.getId(), folderRepository) + FileSystems.getDefault().getSeparator() + file.getName();
+//            Folder parentFolder = folderFileRepository.findFolderFileByFileId(file_id)
+//                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with file id: " + file_id + " not found"))
+//                    .getFolder();
+
+            String filepath = DatabaseFsService.getFolderPath(parentFolder.getId(), folderRepository) + FileSystems.getDefault().getSeparator() + file.getName();
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .body(FileService.getFile(filepath));
@@ -94,6 +91,18 @@ public class FileController {
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
         }
 
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteFile(@RequestParam("id") Integer id) {
+        try {
+            DatabaseFsService.deleteFile(id, folderFileRepository, fileRepository);
+            return ResponseEntity.ok(null);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        } catch (ResponseStatusException e) {
+            return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());
+        }
     }
 
 

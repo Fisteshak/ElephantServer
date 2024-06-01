@@ -20,8 +20,14 @@ public class File {
     @Column(name = "name", nullable = false)
     private String name;
 
-    public File(String name) {
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "parent_id", nullable = false)
+    private Folder parent;
+
+
+    public File(String name, Folder parent) {
         this.name = name;
+        this.parent = parent;
     }
 
     @Override

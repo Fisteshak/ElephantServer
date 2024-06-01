@@ -62,14 +62,39 @@ public class FileService {
     public static void deleteDirectory(String path) throws IOException {
         Path directoryPath = Paths.get(path);
         try {
-            if (Files.exists(directoryPath)) {
-                Files.delete(directoryPath);
+            if (!Files.exists(directoryPath)) {
+                throw new IOException("Entity with path " + directoryPath + " does not exist");
             }
-        } catch (Exception e) {
+            if (!Files.isDirectory(directoryPath)) {
+                throw new IOException("Entity with path " + directoryPath + " is not directory");
+            }
+            Files.delete(directoryPath);
+        } catch (IOException e) {
             //TODO expand error handling
-            throw new IOException("Failed to delete directory at /" + path);
+            throw e;
+        } catch (Exception e) {
+            throw new IOException("Couldn't delete directory with path " + directoryPath);
         }
     }
+
+    public static void deleteFile(String path) throws IOException {
+        Path directoryPath = Paths.get(path);
+        try {
+            if (Files.notExists(directoryPath)) {
+                throw new IOException("Entity with path " + directoryPath + " does not exist");
+            }
+            if (!Files.isRegularFile(directoryPath)) {
+                throw new IOException("Entity with path " + directoryPath + " is not file");
+            }
+            Files.delete(directoryPath);
+        } catch (IOException e) {
+            //TODO expand error handling
+            throw e;
+        } catch (Exception e) {
+            throw new IOException("Couldn't delete file with path " + directoryPath);
+        }
+    }
+
 
     public static Resource getFile(String path) throws IOException {
 

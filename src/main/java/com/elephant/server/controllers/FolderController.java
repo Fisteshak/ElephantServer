@@ -50,7 +50,7 @@ public class FolderController {
             FolderFolder folderFolder = new FolderFolder(folderFolderId, childFolder.getParent(), childFolder);
             folderFolderRepository.save(folderFolder);
 
-            FileService.createDirectory(FileService.FILES_DIRECTORY + DatabaseFsService.getPath(childFolder.getId(), folderRepository));
+            FileService.createDirectory(FileService.FILES_DIRECTORY + DatabaseFsService.getFolderPath(childFolder.getId(), folderRepository));
 
 
 
@@ -95,7 +95,7 @@ public class FolderController {
             Folder folder = folderRepository.findFolderById(folderID)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with id: " + folderID + " not found"));
 
-            DatabaseFsService.deleteFolder(folderID, folderFolderRepository, folderRepository);
+            DatabaseFsService.deleteFolder(folderID, folderFolderRepository, folderRepository, folderFileRepository, fileRepository);
             return new ResponseEntity<>(HttpStatus.OK);
 
         } catch (ResponseStatusException e) {
