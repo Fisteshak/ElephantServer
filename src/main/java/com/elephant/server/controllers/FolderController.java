@@ -90,13 +90,14 @@ public class FolderController {
     }
 
     @DeleteMapping
-    ResponseEntity<?> deleteFolder(@RequestParam("id") Integer folderID) {
+    public ResponseEntity<?> deleteFolder(@RequestParam("id") Integer folderID) {
         try {
             Folder folder = folderRepository.findFolderById(folderID)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Folder with id: " + folderID + " not found"));
 
             DatabaseFsService.deleteFolder(folderID, folderFolderRepository, folderRepository, folderFileRepository, fileRepository);
-            return new ResponseEntity<>(HttpStatus.OK);
+            return ResponseEntity.ok(true);
+
 
         } catch (ResponseStatusException e) {
             return ResponseEntity.status(e.getStatusCode()).body(e.getMessage());

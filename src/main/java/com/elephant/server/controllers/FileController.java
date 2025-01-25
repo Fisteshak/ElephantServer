@@ -97,7 +97,7 @@ public class FileController {
     public ResponseEntity<?> deleteFile(@RequestParam("id") Integer id) {
         try {
             DatabaseFsService.deleteFile(id, folderFileRepository, fileRepository);
-            return ResponseEntity.ok(null);
+            return ResponseEntity.ok(true);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         } catch (ResponseStatusException e) {
